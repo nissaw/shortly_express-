@@ -4,6 +4,8 @@ var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var bcrypt = require('bcrypt-nodejs');
+var passport = require('passport');
+var flash = require('connect-flash');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -11,15 +13,20 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
-
+// 
 var app = express();
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(partials());
-app.use(session({
-  secret: 'pug loaf'
-}));
+
+require('./app/passport.js')(passport) // pass passport for config
+app.use(session({secret: 'pug loaf'}));
+// required for passport
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
 // Parse JSON (uniform resource locators)
 app.use(bodyParser.json());
 // Parse forms (signup/login)
@@ -119,34 +126,40 @@ app.get('/signup',
     res.render('signup');
   });
 
-app.post('/signup',
-  function(req, res) {
+app.post('/signup', passport.authenticate('local-signup', {
+  successRedirect: '/',
+  failureRedirect: '/login',
+  failureFlash: true
+}));
 
-    var username = req.body.username;
-    var salt = bcrypt.genSaltSync(10);
-    var hash = bcrypt.hashSync(req.body.password, salt);
+// app.post('/signup',
+//   function(req, res) {
 
-    new User({
-      username: username
-    }).fetch().then(function(found) {
-      if (found) {
-        res.redirect('/login');
-      } else {
-        var user = new User({
-          username: username,
-          password: hash,
-        });
+//     var username = req.body.username;
+//     var salt = bcrypt.genSaltSync(10);
+//     var hash = bcrypt.hashSync(req.body.password, salt);
 
-        user.save().then(function(newUser) {
-          Users.add(newUser);
-          req.session.regenerate(function() {
-            req.session.user = username;
-            res.redirect('/');
-          });
-        });
-      }
-    });
-  });
+//     new User({
+//       username: username
+//     }).fetch().then(function(found) {
+//       if (found) {
+//         res.redirect('/login');
+//       } else {
+//         var user = new User({
+//           username: username,
+//           password: hash,
+//         });
+
+//         user.save().then(function(newUser) {
+//           Users.add(newUser);
+//           req.session.regenerate(function() {
+//             req.session.user = username;
+//             res.redirect('/');
+//           });
+//         });
+//       }
+//     });
+//   });
 
 app.get('/logout',
   function(req, res){
