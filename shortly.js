@@ -98,28 +98,28 @@ app.get('/login',
     res.render('login');
   });
 
-app.post('/login',
-  function(req, res) {
-    var password = req.body.password;
-    var username = req.body.username;
+// app.post('/login',
+//   function(req, res) {
+//     var password = req.body.password;
+//     var username = req.body.username;
 
-    new User({
-      username: username
-    }).fetch().then(function(found) {
-      if (found) {
-        if (bcrypt.compareSync(password, found.attributes.password)){
-          req.session.regenerate(function() {
-            req.session.user = username;
-            res.redirect('/');
-          });
-        } else {
-          res.redirect('/login');
-        }
-      } else {
-        res.redirect('/login');
-      }
-    });
-  });
+//     new User({
+//       username: username
+//     }).fetch().then(function(found) {
+//       if (found) {
+//         if (bcrypt.compareSync(password, found.attributes.password)){
+//           req.session.regenerate(function() {
+//             req.session.user = username;
+//             res.redirect('/');
+//           });
+//         } else {
+//           res.redirect('/login');
+//         }
+//       } else {
+//         res.redirect('/login');
+//       }
+//     });
+//   });
 
 app.get('/signup',
   function(req, res) {
@@ -127,6 +127,12 @@ app.get('/signup',
   });
 
 app.post('/signup', passport.authenticate('local-signup', {
+  successRedirect: '/',
+  failureRedirect: '/login',
+  failureFlash: true
+}));
+
+app.post('/login', passport.authenticate('local-login', {
   successRedirect: '/',
   failureRedirect: '/login',
   failureFlash: true
@@ -163,9 +169,8 @@ app.post('/signup', passport.authenticate('local-signup', {
 
 app.get('/logout',
   function(req, res){
-    req.session.destroy(function(){
-      res.redirect('/login');
-    });
+    req.logout();
+    res.redirect('/login');
   });
 
 /************************************************************/

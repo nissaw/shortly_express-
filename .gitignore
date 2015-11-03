@@ -1,3 +1,6 @@
+./lib/
+config.js
+
 node_modules
 *.sqlite
 *.DS_Store
