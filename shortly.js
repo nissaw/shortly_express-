@@ -13,7 +13,7 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
-// 
+ 
 var app = express();
 
 app.set('views', __dirname + '/views');
@@ -92,12 +92,53 @@ app.post('/links',
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.get('/profile', util.restrict,
+  function(req, res){
+    res.render('profile', {user: req.user});
+  });
 
 app.get('/login',
   function(req, res) {
-    res.render('login');
+    res.render('login', {message: req.flash('login-message')});
   });
 
+app.get('/signup',
+  function(req, res) {
+    res.render('signup', {message: req.flash('signup-message')});
+  });
+
+app.post('/signup', passport.authenticate('local-signup', {
+  successRedirect: '/',
+  failureRedirect: '/signup',
+  failureFlash: true
+}));
+
+app.post('/login', passport.authenticate('local-login', {
+  successRedirect: '/',
+  failureRedirect: '/login',
+  failureFlash: true
+}));
+
+app.get('/auth/github',
+  passport.authenticate('github'),
+  function(req, res){
+    // The request will be redirected to GitHub for authentication, so this
+    // function will not be called.
+  });
+
+app.get('/auth/github/callback', 
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  function(req, res) {
+    res.redirect('/');
+  });
+
+app.get('/logout',
+  function(req, res){
+    req.logout();
+    res.redirect('/login');
+  });
+
+//ORIGINAL SOLUTION BEFORE PASSPORT
 // app.post('/login',
 //   function(req, res) {
 //     var password = req.body.password;
@@ -121,22 +162,6 @@ app.get('/login',
 //     });
 //   });
 
-app.get('/signup',
-  function(req, res) {
-    res.render('signup');
-  });
-
-app.post('/signup', passport.authenticate('local-signup', {
-  successRedirect: '/',
-  failureRedirect: '/login',
-  failureFlash: true
-}));
-
-app.post('/login', passport.authenticate('local-login', {
-  successRedirect: '/',
-  failureRedirect: '/login',
-  failureFlash: true
-}));
 
 // app.post('/signup',
 //   function(req, res) {
@@ -167,11 +192,6 @@ app.post('/login', passport.authenticate('local-login', {
 //     });
 //   });
 
-app.get('/logout',
-  function(req, res){
-    req.logout();
-    res.redirect('/login');
-  });
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail

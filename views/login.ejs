@@ -1,4 +1,8 @@
 <h2>Login</h2>
+  <!-- show any messages that come back with authentication -->
+  <% if (message.length > 0) { %>
+      <div class="alert alert-danger"><%= message %></div>
+  <% } %>
 <form action="/login" method="post">
     <div>
       <label for="username">Username:</label>
@@ -12,6 +16,9 @@
       <input type="submit" value="Login">
     </div>
 </form>
+<p>
+  <a href="/auth/github">Sign In With Github &rarr;</a>
+<p>
 <p>
   <a href="/signup">Create an Account &rarr;</a>
 <p>
